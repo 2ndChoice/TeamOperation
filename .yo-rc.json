@@ -1,0 +1,19 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "useGulp": false,
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.14.0",
+    "sdksVersions": {},
+    "version": "1.22.1",
+    "libraryName": "gantt",
+    "libraryId": "e857b1e6-12f1-46cd-82bb-6a0a9607ccf3",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "Gantt",
+    "solutionShortDescription": "Gantt description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
