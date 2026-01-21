@@ -45,7 +45,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
 
   public render(): void {
     console.log('WebPart render called with properties:', {
-      this.description: this.properties.description,
+      description: this.properties.description,
       listId: this.properties.listId,
       listURL: this.properties.listURL,
       titleColumn: this.properties.titleColumn,
