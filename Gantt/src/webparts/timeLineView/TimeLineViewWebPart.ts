@@ -25,6 +25,10 @@ export interface ITimelineViewWebPartProps {
   startDateColumn?: string;
   endDateColumn?: string;
   ownerSequence?: string;
+  defaultPixelsPerDay?: number;
+  minPixelsPerDay?: number;
+  maxPixelsPerDay?: number;
+  webpartTitle?: string;
 }
 
 interface IListInfo {
@@ -66,6 +70,10 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
         startDateColumn: this.properties.startDateColumn,
         endDateColumn: this.properties.endDateColumn,
         ownerSequence: this.properties.ownerSequence,
+        defaultPixelsPerDay: this.properties.defaultPixelsPerDay || 20,
+        minPixelsPerDay: this.properties.minPixelsPerDay || 5,
+        maxPixelsPerDay: this.properties.maxPixelsPerDay || 30,
+        webpartTitle: this.properties.webpartTitle || 'Trip Planning (V 2.0)',
         webUrl: this.context.pageContext.web.absoluteUrl,
         spHttpClient: this.context.spHttpClient
       }
@@ -213,8 +221,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                   selectedKey: selectedListId
                 }),
                 PropertyPaneTextField('listURL', {
-                  label: 'List URL',
-                  description: 'Enter List URL for editing',
+                  label: 'Power App Form URL',
+                  description: 'Enter Power App Form URL for editing',
                   disabled: !selectedListId
                 })
               ]
@@ -264,12 +272,37 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
             {
               groupName: 'View Settings',
               groupFields: [
+                PropertyPaneTextField('webpartTitle', {
+                  label: strings.WebpartTitleLabel,
+                  description: strings.WebpartTitleDescription,
+                  value: this.properties.webpartTitle || 'Trip Planning (V 2.0)'
+                }),
                 PropertyPaneTextField('ownerSequence', {
                   label: strings.OwnerSequenceFieldLabel,
                   description: strings.OwnerSequenceFieldDescription,
                   multiline: true,
                   rows: 5,
-                  placeholder: 'Frank, Tony, Bang...'
+                  placeholder: 'Frank, Tony, Ning, ...',
+                })
+              ]
+            },
+            {
+              groupName: 'Zoom Configuration',
+              groupFields: [
+                PropertyPaneTextField('defaultPixelsPerDay', {
+                  label: strings.DefaultPixelsPerDayLabel,
+                  description: strings.DefaultPixelsPerDayDescription,
+                  value: (this.properties.defaultPixelsPerDay || 20).toString()
+                }),
+                PropertyPaneTextField('minPixelsPerDay', {
+                  label: strings.MinPixelsPerDayLabel,
+                  description: strings.MinPixelsPerDayDescription,
+                  value: (this.properties.minPixelsPerDay || 5).toString()
+                }),
+                PropertyPaneTextField('maxPixelsPerDay', {
+                  label: strings.MaxPixelsPerDayLabel,
+                  description: strings.MaxPixelsPerDayDescription,
+                  value: (this.properties.maxPixelsPerDay || 30).toString()
                 })
               ]
             }

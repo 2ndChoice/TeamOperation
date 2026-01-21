@@ -19,9 +19,6 @@ export interface ITimelineViewState {
 } 
 
 const TimelineViewConstants = {
-  DEFAULT_PIXELS_PER_DAY: 20,
-  MIN_PIXELS_PER_DAY: 5,
-  MAX_PIXELS_PER_DAY: 30,
   ZOOM_STEP: 1,
   DAYS_IN_A_WEEK: 7,
   API_ITEM_LIMIT: 5000,
@@ -31,11 +28,17 @@ const TimelineViewConstants = {
 
 const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   const iframeInitialLoad = useRef<boolean>(true);
+  
+  // Get zoom configuration from props with fallback to defaults
+  const defaultPixelsPerDay = props.defaultPixelsPerDay || 20;
+  const minPixelsPerDay = props.minPixelsPerDay || 5;
+  const maxPixelsPerDay = props.maxPixelsPerDay || 30;
+  
   const [state, setState] = useState<ITimelineViewState>({
     tasks: [],
     groupedTasks: {},
     loading: true,
-    pixelsPerDay: TimelineViewConstants.DEFAULT_PIXELS_PER_DAY,
+    pixelsPerDay: defaultPixelsPerDay,
     error: null,
     chartStartDate: new Date(new Date().getFullYear(), 0, 1),
     isPanelOpen: false,
@@ -304,14 +307,14 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   const handleZoomIn = () => {
     setState(prev => ({
       ...prev,
-      pixelsPerDay: Math.min(prev.pixelsPerDay + TimelineViewConstants.ZOOM_STEP, TimelineViewConstants.MAX_PIXELS_PER_DAY)
+      pixelsPerDay: Math.min(prev.pixelsPerDay + TimelineViewConstants.ZOOM_STEP, maxPixelsPerDay)
     }));
   };
 
   const handleZoomOut = () => {
     setState(prev => ({
       ...prev,
-      pixelsPerDay: Math.max(prev.pixelsPerDay - TimelineViewConstants.ZOOM_STEP, TimelineViewConstants.MIN_PIXELS_PER_DAY)
+      pixelsPerDay: Math.max(prev.pixelsPerDay - TimelineViewConstants.ZOOM_STEP, minPixelsPerDay)
     }));
   };
 
@@ -420,7 +423,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     <div className={styles.timelineView}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarTitle}>
-          <h2>Trip Planning (V 2.0)</h2>
+          <h2>{props.webpartTitle || 'Trip Planning (V 2.0)'}</h2>
         </div>
         <div className={styles.toolbarControls}>
           <div className={styles.startDateControl}>
@@ -444,14 +447,14 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
             <div className={styles.zoomControls}>
               <button
                 onClick={handleZoomOut}
-                disabled={state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY}
+                disabled={state.pixelsPerDay <= minPixelsPerDay}
                 title="Zoom Out"
               >
                 <Icon iconName="ZoomOut" />
               </button>
               <button
                 onClick={handleZoomIn}
-                disabled={state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY}
+                disabled={state.pixelsPerDay >= maxPixelsPerDay}
                 title="Zoom In"
               >
                 <Icon iconName="ZoomIn" />

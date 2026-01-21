@@ -20,6 +20,10 @@ export interface ITimelineViewProps {
   endDateColumn?: string;
   webUrl: string;
   spHttpClient: SPHttpClient;
-  ownerSequence?: string; 
+  ownerSequence?: string;
+  defaultPixelsPerDay?: number;
+  minPixelsPerDay?: number;
+  maxPixelsPerDay?: number;
+  webpartTitle?: string;
 }
 
