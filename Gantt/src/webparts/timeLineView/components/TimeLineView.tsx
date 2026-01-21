@@ -16,7 +16,7 @@ export interface ITimelineViewState {
   chartStartDate: Date | null;
   isPanelOpen: boolean;
   panelUrl: string;
-}
+} 
 
 const TimelineViewConstants = {
   DEFAULT_PIXELS_PER_DAY: 20,
