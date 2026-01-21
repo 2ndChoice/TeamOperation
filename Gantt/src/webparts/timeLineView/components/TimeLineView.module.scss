@@ -41,22 +41,36 @@
   padding-top: 20px;
   padding-left: 100px
 }
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
 .zoomControls {
   display: flex;
   gap: 10px;
 
   button {
+    display: flex;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
     padding: 8px 16px;
+    color: #333333;
+    align-items: center;
+    justify-content: center;    
     border: 1px solid #c8c6c4;
     background-color: #ffffff;
     cursor: pointer;
-    border-radius: 2px;
-    font-size: 14px;
+    border-radius: 5px;
+    font-size: 18px;
     transition: all 0.2s;
 
     &:hover {
-      background-color: #f3f2f1;
+      background-color: #e3f2fd;
+      color: #0078d4;
+      border-color: #0078d4;
     }
 
     &.active {
@@ -64,6 +78,42 @@
       color: white;
       border-color: #0078d4;
     }
+    &:disabled {
+      background-color: #e0e0e0;
+      color: #999;
+      border-color: #999999;
+      cursor: not-allowed;
+
+      &:hover {
+        background-color: #e0e0e0;
+        color: #999;
+        border-color: #999999;
+      }
+    }
+  }
+}
+
+.addTripButton {
+  padding: 0 8px;
+  height: 28px;
+  border: 1px solid #999999;
+  background-color: white;
+  color: #333333;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #e3f2fd;
+    color: #0078d4;
+    border-color: #0078d4;
   }
 }
 

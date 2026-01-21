@@ -432,53 +432,31 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
               onChange={handleStartDateChange}
             />
           </div>
-          <div className={styles.zoomControls}>
+          <div className={styles.rightControls}>
             <button
-              onClick={handleZoomOut}
-              disabled={state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY}
-              title="Zoom Out"
-              style={{
-                padding: '0',
-                backgroundColor: state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY ? '#e0e0e0' : '#0078d4',
-                color: state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY ? '#999' : 'white',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: 'normal',
-                lineHeight: '1',
-                width: `${TimelineViewConstants.BUTTON_SIZE}px`,
-                height: `${TimelineViewConstants.BUTTON_SIZE}px`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
+              onClick={() => handleAddTask(new Date(), '')}
+              title="Add a new trip or right click on the timeline to add or modify a trip"
+              className={styles.addTripButton}
             >
-              <Icon iconName="ZoomOut" />
+              <Icon iconName="Add" />
+              Add a Trip
             </button>
-            <button
-              onClick={handleZoomIn}
-              disabled={state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY}
-              title="Zoom In"
-              style={{
-                padding: '0',
-                backgroundColor: state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY ? '#e0e0e0' : '#0078d4',
-                color: state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY ? '#999' : 'white',
-                border: 'none',
-                borderRadius: '50%',
-                cursor: state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: 'normal',
-                lineHeight: '1',
-                width: `${TimelineViewConstants.BUTTON_SIZE}px`,
-                height: `${TimelineViewConstants.BUTTON_SIZE}px`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Icon iconName="ZoomIn" />
-            </button>
+            <div className={styles.zoomControls}>
+              <button
+                onClick={handleZoomOut}
+                disabled={state.pixelsPerDay <= TimelineViewConstants.MIN_PIXELS_PER_DAY}
+                title="Zoom Out"
+              >
+                <Icon iconName="ZoomOut" />
+              </button>
+              <button
+                onClick={handleZoomIn}
+                disabled={state.pixelsPerDay >= TimelineViewConstants.MAX_PIXELS_PER_DAY}
+                title="Zoom In"
+              >
+                <Icon iconName="ZoomIn" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
