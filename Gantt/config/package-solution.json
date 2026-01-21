@@ -8,18 +8,18 @@
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
     "developer": {
-      "name": "",
-      "websiteUrl": "",
-      "privacyUrl": "",
-      "termsOfUseUrl": "",
+      "name": "Harry Li",
+      "websiteUrl": "https://efutureway.sharepoint.com/sites/archive-2020-11-23T230729Z",
+      "privacyUrl": "https://www.example.com/privacy",
+      "termsOfUseUrl": "https://www.example.com/terms",
       "mpnId": "Undefined-1.22.1"
     },
     "metadata": {
       "shortDescription": {
-        "default": "Gantt description"
+        "default": "Interactive Timeline View - Manage team trips with a responsive Gantt-style timeline display."
       },
       "longDescription": {
-        "default": "Gantt description"
+        "default": "The Timeline View web part provides an interactive Gantt-style timeline for team trip management. Features include:\n- Customizable zoom levels (5-30 pixels per day) for flexible date range visualization\n- Fixed task owner column with synchronized scrolling\n- Filter tasks by start date\n- Responsive grid layout with dynamic header dates and vertical grid lines\n- Add and manage tasks directly from SharePoint\n- Context menu for task operations (edit, delete)\n- Smooth animations and intuitive controls"
       },
       "screenshotPaths": [],
       "videoUrl": "",
@@ -27,7 +27,7 @@
     },
     "features": [
       {
-        "title": "gantt Feature",
+        "title": "Gantt Feature",
         "description": "The feature that activates elements of the gantt solution.",
         "id": "5c10fb2c-a7e9-420d-88dd-7b1b878b1456",
         "version": "1.0.0.0"
