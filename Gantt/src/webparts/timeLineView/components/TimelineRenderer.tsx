@@ -66,11 +66,12 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
     }
   };
 
-  // Color palette for owners
+  // Color palette for owners - evenly distributed colors
   const colors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
     '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
-    '#ee7a27ff', '#AED6F1'
+    '#FF9A56', '#6BCB77', '#4D96FF', '#FFD93D',
+    '#6C5CE7', '#E84393', '#00B894', '#FF7675'
   ];
 
   const getOwnerColor = (owner: string): string => {
