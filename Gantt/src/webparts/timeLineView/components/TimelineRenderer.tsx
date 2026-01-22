@@ -214,7 +214,7 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
       items: [
         {
           key: 'modify',
-          text: 'Modify Task',
+          text: 'Modify a trip',
           iconProps: { iconName: 'Edit' },
           onClick: (ev, item) => {
             console.log('Modify Task clicked for:', task);
@@ -227,7 +227,7 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
         },
         {
           key: 'delete',
-          text: 'Delete Task',
+          text: 'Delete a trip',
           iconProps: { iconName: 'Delete' },
           onClick: () => {
             if (onDeleteTask) onDeleteTask(task);
@@ -260,7 +260,7 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
       items: [
         {
           key: 'add',
-          text: 'Add New Task',
+          text: 'Add a new trip',
           iconProps: { iconName: 'Add' },
           onClick: () => {
             if (onAddTask) onAddTask(clickedDate, owner);

@@ -442,7 +442,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
               className={styles.addTripButton}
             >
               <Icon iconName="Add" />
-              Add a Trip
+              Add a trip
             </button>
             <div className={styles.zoomControls}>
               <button
