@@ -21,7 +21,7 @@ const TimelineConstants = {
   HEADER_PADDING_X: 8
 };
 
-interface ITimelineRendererProps {
+export interface ITimelineRendererProps {
   groupedTasks: { [owner: string]: ITask[] };
   pixelsPerDay: number;
   chartStartDate: Date | null;
@@ -32,11 +32,66 @@ interface ITimelineRendererProps {
   onDeleteTask?: (task: ITask) => void;
 }
 
-const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixelsPerDay, chartStartDate, onTaskClick, ownerSequence, onAddTask, onModifyTask, onDeleteTask }) => {
+export interface ITimelineRendererHandle {
+  saveScrollPosition: () => void;
+}
+
+const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHandle, ITimelineRendererProps> = ({ groupedTasks, pixelsPerDay, chartStartDate, onTaskClick, ownerSequence, onAddTask, onModifyTask, onDeleteTask }, ref) => {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
   const timelineRowsRef = React.useRef<HTMLDivElement>(null);
   const headerScrollRef = React.useRef<HTMLDivElement>(null);
+  const savedScrollLeftRef = React.useRef<number>(0);
   const [contextualMenuProps, setContextualMenuProps] = React.useState<{ items: IContextualMenuItem[], target: MouseEvent | Element } | undefined>(undefined);
+
+  // Expose saveScrollPosition to parent via ref
+  const saveScrollPosition = () => {
+    if (scrollContainerRef.current) {
+      savedScrollLeftRef.current = scrollContainerRef.current.scrollLeft;
+      try {
+        if (typeof sessionStorage !== 'undefined') {
+          sessionStorage.setItem('timeline_scroll_left', String(savedScrollLeftRef.current));
+        }
+      } catch (e) {
+        // ignore
+      }
+      console.log('Manual save scroll position:', savedScrollLeftRef.current);
+    }
+  };
+
+  React.useImperativeHandle(ref, () => ({
+    saveScrollPosition
+  }));
+
+  // Restore scroll position after groupedTasks changes (i.e. refresh)
+  React.useEffect(() => {
+    // Try in-memory first, then sessionStorage
+    let toRestore = savedScrollLeftRef.current;
+    if ((!toRestore || toRestore === 0) && typeof sessionStorage !== 'undefined') {
+      const persisted = sessionStorage.getItem('timeline_scroll_left');
+      if (persisted) {
+        const parsed = parseInt(persisted, 10);
+        if (!isNaN(parsed)) {
+          toRestore = parsed;
+        }
+      }
+    }
+
+    if (toRestore > 0) {
+      const restore = () => {
+        if (scrollContainerRef.current) scrollContainerRef.current.scrollLeft = toRestore;
+        if (timelineRowsRef.current) timelineRowsRef.current.scrollLeft = toRestore;
+        if (headerScrollRef.current) headerScrollRef.current.scrollLeft = toRestore;
+      };
+      try {
+        restore();
+        window.requestAnimationFrame(() => restore());
+        setTimeout(() => restore(), 50);
+        setTimeout(() => restore(), 200);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [groupedTasks]);
 
   const theStartDate = chartStartDate ? new Date(chartStartDate.getTime()) : new Date(new Date().getFullYear(), 0, 1);
 
@@ -58,6 +113,16 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
   // Sync horizontal scroll between header and rows
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollLeft = (e.target as HTMLDivElement).scrollLeft;
+    // Save in-memory and persist so a parent-triggered refresh can restore
+    savedScrollLeftRef.current = scrollLeft;
+    try {
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem('timeline_scroll_left', String(scrollLeft));
+      }
+    } catch (e) {
+      // ignore
+    }
+
     if (timelineRowsRef.current) {
       timelineRowsRef.current.scrollLeft = scrollLeft;
     }
@@ -103,7 +168,9 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
 
     // Add padding to date range
     minDate.setDate(minDate.getDate() - TimelineConstants.DAYS_IN_A_WEEK);
+    // always set maxDate one month more for better UX
     maxDate.setDate(maxDate.getDate() + TimelineConstants.DAYS_IN_A_WEEK);
+    maxDate = new Date(maxDate.getFullYear(), maxDate.getMonth() + 1, 1);
 
     return { minDate, maxDate };
   };
@@ -161,7 +228,7 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
         currentDate.setMonth(currentDate.getMonth() + 1);
       }
       // draw one extra month at the end for better UX
-      headerDates.push(new Date(currentDate));
+      // headerDates.push(new Date(currentDate));
     }
 
     return headerDates;
@@ -181,7 +248,6 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
     if (currentDate < theStartDate) {
         currentDate.setDate(currentDate.getDate() + 7);
     }
-
     while (currentDate <= maxDate) {
         GridWeekDates.push(new Date(currentDate));
         currentDate.setDate(currentDate.getDate() + 7);
@@ -486,4 +552,4 @@ const TimelineRenderer: React.FC<ITimelineRendererProps> = ({ groupedTasks, pixe
   );
 };
 
-export default TimelineRenderer;
+export default React.forwardRef(TimelineRendererInner);

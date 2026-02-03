@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import styles from './TimeLineView.module.scss';
 import { ITask, ITimelineViewProps } from './ITimeLineViewProps';
-import TimelineRenderer from './TimelineRenderer';
+import TimelineRenderer, { ITimelineRendererHandle } from './TimelineRenderer';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
@@ -28,6 +28,7 @@ const TimelineViewConstants = {
 
 const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   const iframeInitialLoad = useRef<boolean>(true);
+  const rendererRef = React.useRef<ITimelineRendererHandle | null>(null);
   
   // Get zoom configuration from props with fallback to defaults
   const defaultPixelsPerDay = props.defaultPixelsPerDay || 20;
@@ -219,6 +220,10 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   const onDismissPanel = React.useCallback(() => {
     console.log('onDismissPanel called');
     setState(prev => ({ ...prev, isPanelOpen: false, panelUrl: '' }));
+    // Save scroll position in renderer before refreshing tasks
+    try {
+      rendererRef.current?.saveScrollPosition();
+    } catch (e) {}
     fetchTasks();
   }, [fetchTasks]);
 
@@ -231,6 +236,9 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   // Refresh tasks when window gets focus (e.g. returning from the Power App form)
   useEffect(() => {
     const handleFocus = () => {
+      try {
+        rendererRef.current?.saveScrollPosition();
+      } catch (e) {}
       fetchTasks();
     };
 
@@ -292,6 +300,9 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       );
 
       if (response.ok) {
+        try {
+          rendererRef.current?.saveScrollPosition();
+        } catch (e) {}
         fetchTasks();
       } else {
         const msg = await response.text();
@@ -466,6 +477,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
 
       {/* Custom Timeline Renderer */}
       <TimelineRenderer
+        ref={rendererRef}
         groupedTasks={state.groupedTasks}
         pixelsPerDay={state.pixelsPerDay}
         chartStartDate={state.chartStartDate}
