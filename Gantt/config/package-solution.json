@@ -1,9 +1,9 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
   "solution": {
-    "name": "gantt-client-side-solution",
-    "id": "e857b1e6-12f1-46cd-82bb-6a0a9607ccf3",
-    "version": "1.0.0.0",
+    "name": "Gantt Timeline View",
+    "id": "e857b1e6-12f1-46cd-82bb-7a0a9607ccf3",
+    "version": "2.0.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,

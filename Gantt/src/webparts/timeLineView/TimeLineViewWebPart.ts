@@ -18,6 +18,7 @@ import { ITimelineViewProps } from './components/ITimeLineViewProps';
 
 export interface ITimelineViewWebPartProps {
   description: string;
+  siteUrl?: string;
   listId?: string;
   listURL?: string;
   titleColumn?: string;
@@ -46,6 +47,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   private lists: IPropertyPaneDropdownOption[] = [];
   private columns: { [listId: string]: IPropertyPaneDropdownOption[] } = {};
   private loadingLists: boolean = false;
+  private _teamsContext: any;
 
   public render(): void {
     console.log('WebPart render called with properties:', {
@@ -74,7 +76,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
         minPixelsPerDay: this.properties.minPixelsPerDay || 5,
         maxPixelsPerDay: this.properties.maxPixelsPerDay || 30,
         webpartTitle: this.properties.webpartTitle || 'Trip Planning (V 2.0)',
-        webUrl: this.context.pageContext.web.absoluteUrl,
+        webUrl: this.getSiteUrl(),
         spHttpClient: this.context.spHttpClient
       }
     );
@@ -83,8 +85,17 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   }
 
   protected async onInit(): Promise<void> {
-    await this.loadLists();
-    return super.onInit();
+    return super.onInit().then(_ => {
+      // Capture Teams context if running in Teams
+      this._teamsContext = (this.context as any).sdks?.microsoftTeams?.context;
+      console.log('Teams context initialized:', this._teamsContext);
+      return this.loadLists();
+    });
+  }
+
+  // Get the site URL (custom or current)
+  private getSiteUrl(): string {
+    return this.properties.siteUrl || this.context.pageContext.web.absoluteUrl;
   }
 
   private async loadLists(): Promise<void> {
@@ -92,7 +103,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
     
     this.loadingLists = true;
     try {
-      const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists?$filter=Hidden eq false&$select=Id,Title&$orderby=Title`;
+      const siteUrl = this.getSiteUrl();
+      const apiUrl = `${siteUrl}/_api/web/lists?$filter=Hidden eq false&$select=Id,Title&$orderby=Title`;
       const response: SPHttpClientResponse = await this.context.spHttpClient.get(
         apiUrl,
         SPHttpClient.configurations.v1
@@ -120,7 +132,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
     if (!listId || this.columns[listId]) return;
 
     try {
-      const apiUrl = `${this.context.pageContext.web.absoluteUrl}/_api/web/lists('${listId}')/fields?$filter=Hidden eq false and ReadOnlyField eq false&$select=InternalName,Title,TypeAsString&$orderby=Title`;
+      const siteUrl = this.getSiteUrl();
+      const apiUrl = `${siteUrl}/_api/web/lists('${listId}')/fields?$filter=Hidden eq false and ReadOnlyField eq false&$select=InternalName,Title,TypeAsString&$orderby=Title`;
       const response: SPHttpClientResponse = await this.context.spHttpClient.get(
         apiUrl,
         SPHttpClient.configurations.v1
@@ -176,7 +189,20 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   protected onPropertyPaneFieldChanged(propertyPath: string, oldValue: any, newValue: any): void {
     console.log(`Property ${propertyPath} changed from ${oldValue} to ${newValue}`);
     
-    if (propertyPath === 'listId' && newValue) {
+    if (propertyPath === 'siteUrl' && newValue !== oldValue) {
+      // Clear lists and columns when site URL changes
+      this.lists = [];
+      this.columns = {};
+      this.properties.listId = '';
+      this.properties.titleColumn = '';
+      this.properties.ownerColumn = '';
+      this.properties.startDateColumn = '';
+      this.properties.endDateColumn = '';
+      this.loadLists().then(() => {
+        this.context.propertyPane.refresh();
+        this.render();
+      });
+    } else if (propertyPath === 'listId' && newValue) {
       // Clear column selections when list changes
       this.properties.titleColumn = '';
       this.properties.ownerColumn = '';
@@ -215,6 +241,11 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
             {
               groupName: 'List Configuration',
               groupFields: [
+                PropertyPaneTextField('siteUrl', {
+                  label: 'SharePoint Site URL (Optional)',
+                  description: 'Leave empty to use current site, or enter the URL of another SharePoint site (e.g., https://tenant.sharepoint.com/sites/mysite)',
+                  placeholder: this.context.pageContext.web.absoluteUrl
+                }),
                 PropertyPaneDropdown('listId', {
                   label: 'Select SharePoint List',
                   options: this.lists.length > 0 ? this.lists : [{ key: '', text: 'Loading lists...' }],
