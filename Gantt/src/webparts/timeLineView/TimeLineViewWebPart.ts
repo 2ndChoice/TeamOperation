@@ -66,7 +66,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       {
         description: this.properties.description,
         listId: this.properties.listId,
-        listURL: this.properties.listURL,
+        listURL: this.properties.listURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
         titleColumn: this.properties.titleColumn,
         ownerColumn: this.properties.ownerColumn,
         startDateColumn: this.properties.startDateColumn,
@@ -75,8 +75,11 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
         defaultPixelsPerDay: this.properties.defaultPixelsPerDay || 20,
         minPixelsPerDay: this.properties.minPixelsPerDay || 5,
         maxPixelsPerDay: this.properties.maxPixelsPerDay || 30,
-        webpartTitle: this.properties.webpartTitle || 'Trip Planning (V 2.0)',
-        webUrl: this.getSiteUrl(),
+        webpartTitle: this.properties.webpartTitle || 'Trip Planning (V 3.0)',
+        webUrl: this.getSiteUrl() || 'https://efutureway.sharepoint.com/sites/archive-2020-11-23T230729Z',
+        // pass the web part context so that inner components can
+        // determine Teams/OAuth state or access pageContext values
+        context: this.context,
         spHttpClient: this.context.spHttpClient
       }
     );

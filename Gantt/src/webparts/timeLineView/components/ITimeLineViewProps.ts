@@ -1,4 +1,8 @@
 import { SPHttpClient } from '@microsoft/sp-http';
+// WebPartContext provides typing for the SPFx context object that's
+// commonly passed down into React components for helpers like
+// `httpClient`, `pageContext`, and Teams SDK access.
+import { WebPartContext } from '@microsoft/sp-webpart-base';
 
 export interface ITask {
   id: string;
@@ -20,6 +24,12 @@ export interface ITimelineViewProps {
   endDateColumn?: string;
   webUrl: string;
   spHttpClient: SPHttpClient;
+  /**
+   * SPFx context object supplied by the web part.  We use this for
+   * things like detecting Teams, grabbing the current user's email,
+   * or accessing pageContext properties from inside the React tree.
+   */
+  context: WebPartContext;
   ownerSequence?: string;
   defaultPixelsPerDay?: number;
   minPixelsPerDay?: number;

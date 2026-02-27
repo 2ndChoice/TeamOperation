@@ -256,10 +256,17 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     // Format date as YYYY-MM-DD for the URL parameter
     const dateParam = date.toISOString().split('T')[0];
 
+    const { context } = props;
+    const isTeams = !!context.sdks.microsoftTeams;
+    const loginHint = context.pageContext.user.email;
+    
     let url = `${props.listURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
 
     if (props.ownerColumn && owner) {
       url += `&${props.ownerColumn}=${encodeURIComponent(owner)}`;
+    }
+    if (isTeams) {
+      url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
     }
 
     console.log('Opening New Form URL:', url);
@@ -273,7 +280,14 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
 
     iframeInitialLoad.current = true; // Reset on open
 
+    const { context } = props;
+    const isTeams = !!context.sdks.microsoftTeams;
+    const loginHint = context.pageContext.user.email;
+
     let url = `${props.listURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
+    if (isTeams) {
+      url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
+    }
 
     setState(prev => ({ ...prev, isPanelOpen: true, panelUrl: url }));
   };
@@ -434,7 +448,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     <div className={styles.timelineView}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarTitle}>
-          <h2>{props.webpartTitle || 'Trip Planning (V 2.0)'}</h2>
+          <h2>{props.webpartTitle || 'Trip Planning (V 3.0)'}</h2>
         </div>
         <div className={styles.toolbarControls}>
           <div className={styles.startDateControl}>

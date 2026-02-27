@@ -3,7 +3,7 @@
   "solution": {
     "name": "Gantt Timeline View",
     "id": "e857b1e6-12f1-46cd-82bb-7a0a9607ccf3",
-    "version": "2.0.0.0",
+    "version": "3.0.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -27,7 +27,7 @@
     },
     "features": [
       {
-        "title": "Gantt Feature",
+        "title": "Gantt Timeline View Feature",
         "description": "The feature that activates elements of the gantt solution.",
         "id": "5c10fb2c-a7e9-420d-88dd-7b1b878b1456",
         "version": "1.0.0.0"
