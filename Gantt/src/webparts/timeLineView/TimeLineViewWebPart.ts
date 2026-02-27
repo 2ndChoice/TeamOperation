@@ -66,7 +66,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       {
         description: this.properties.description,
         listId: this.properties.listId,
-        listURL: this.properties.listURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
+        listURL: this.properties.listURL,
         titleColumn: this.properties.titleColumn,
         ownerColumn: this.properties.ownerColumn,
         startDateColumn: this.properties.startDateColumn,
@@ -76,7 +76,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
         minPixelsPerDay: this.properties.minPixelsPerDay || 5,
         maxPixelsPerDay: this.properties.maxPixelsPerDay || 30,
         webpartTitle: this.properties.webpartTitle || 'Trip Planning (V 3.0)',
-        webUrl: this.getSiteUrl() || 'https://efutureway.sharepoint.com/sites/archive-2020-11-23T230729Z',
+        webUrl: this.getSiteUrl(),
         // pass the web part context so that inner components can
         // determine Teams/OAuth state or access pageContext values
         context: this.context,
@@ -247,7 +247,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                 PropertyPaneTextField('siteUrl', {
                   label: 'SharePoint Site URL (Optional)',
                   description: 'Leave empty to use current site, or enter the URL of another SharePoint site (e.g., https://tenant.sharepoint.com/sites/mysite)',
-                  placeholder: this.context.pageContext.web.absoluteUrl
+                  value: this.properties.siteUrl || 'https://efutureway.sharepoint.com/sites/archive-2020-11-23T230729Z'
+
                 }),
                 PropertyPaneDropdown('listId', {
                   label: 'Select SharePoint List',
@@ -257,6 +258,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                 PropertyPaneTextField('listURL', {
                   label: 'Power App Form URL',
                   description: 'Enter Power App Form URL for editing',
+                  value: this.properties.listURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
                   disabled: !selectedListId
                 })
               ]
@@ -309,14 +311,14 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                 PropertyPaneTextField('webpartTitle', {
                   label: strings.WebpartTitleLabel,
                   description: strings.WebpartTitleDescription,
-                  value: this.properties.webpartTitle || 'Trip Planning (V 2.0)'
+                  value: this.properties.webpartTitle || 'Trip Planning (V 3.0)'
                 }),
                 PropertyPaneTextField('ownerSequence', {
                   label: strings.OwnerSequenceFieldLabel,
                   description: strings.OwnerSequenceFieldDescription,
                   multiline: true,
                   rows: 5,
-                  placeholder: 'Frank, Tony, Ning, ...',
+                  value: this.properties.ownerSequence || 'Frank, Tony, Bang, Ning, Zhihao, Naveen, Yong, Heng,Tariq, Harry, Brian, Santhosh'
                 })
               ]
             },
