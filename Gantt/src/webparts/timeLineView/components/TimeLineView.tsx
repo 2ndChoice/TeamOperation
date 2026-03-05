@@ -65,12 +65,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       return;
     }
 
-    if (!props.powerAppURL) {
-      console.warn('No Power App URL configured');
-      setState(prev => ({ ...prev, loading: false, error: 'Please select a Power App URL' }));
-      return;
-    }
-
     const titleCol = props.titleColumn;
     const ownerCol = props.ownerColumn;
     const categoryCol = props.categoryColumn;
