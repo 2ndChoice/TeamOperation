@@ -20,9 +20,10 @@ export interface ITimelineViewWebPartProps {
   description: string;
   siteUrl?: string;
   listId?: string;
-  listURL?: string;
+  powerAppURL?: string;
   titleColumn?: string;
   ownerColumn?: string;
+  categoryColumn?: string;
   startDateColumn?: string;
   endDateColumn?: string;
   ownerSequence?: string;
@@ -53,9 +54,10 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
     console.log('WebPart render called with properties:', {
       description: this.properties.description,
       listId: this.properties.listId,
-      listURL: this.properties.listURL,
+      powerAppURL: this.properties.powerAppURL,
       titleColumn: this.properties.titleColumn,
       ownerColumn: this.properties.ownerColumn,
+      categoryColumn: this.properties.categoryColumn,
       startDateColumn: this.properties.startDateColumn,
       endDateColumn: this.properties.endDateColumn,
       ownerSequence: this.properties.ownerSequence
@@ -66,9 +68,10 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       {
         description: this.properties.description,
         listId: this.properties.listId,
-        listURL: this.properties.listURL,
+        powerAppURL: this.properties.powerAppURL,
         titleColumn: this.properties.titleColumn,
         ownerColumn: this.properties.ownerColumn,
+        categoryColumn: this.properties.categoryColumn,
         startDateColumn: this.properties.startDateColumn,
         endDateColumn: this.properties.endDateColumn,
         ownerSequence: this.properties.ownerSequence,
@@ -199,6 +202,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       this.properties.listId = '';
       this.properties.titleColumn = '';
       this.properties.ownerColumn = '';
+      this.properties.categoryColumn = '';
       this.properties.startDateColumn = '';
       this.properties.endDateColumn = '';
       this.loadLists().then(() => {
@@ -209,6 +213,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       // Clear column selections when list changes
       this.properties.titleColumn = '';
       this.properties.ownerColumn = '';
+      this.properties.categoryColumn = '';
       this.properties.startDateColumn = '';
       this.properties.endDateColumn = '';
       // Load columns for the new list
@@ -255,10 +260,10 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                   options: this.lists.length > 0 ? this.lists : [{ key: '', text: 'Loading lists...' }],
                   selectedKey: selectedListId
                 }),
-                PropertyPaneTextField('listURL', {
+                PropertyPaneTextField('powerAppURL', {
                   label: 'Power App Form URL',
                   description: 'Enter Power App Form URL for editing',
-                  value: this.properties.listURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
+                  value: this.properties.powerAppURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
                   disabled: !selectedListId
                 })
               ]
@@ -275,7 +280,13 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                 PropertyPaneDropdown('ownerColumn', {
                   label: 'Owner Column',
                   options: availableColumns.length > 0 ? availableColumns : [{ key: '', text: 'Select a list first...' }],
-                  selectedKey: this.properties.ownerColumn || '',
+                  selectedKey: this.properties.ownerColumn || 'Consultant',
+                  disabled: !selectedListId
+                }),
+                PropertyPaneDropdown('categoryColumn', {
+                  label: 'Category Column',
+                  options: availableColumns.length > 0 ? availableColumns : [{ key: '', text: 'Select a list first...' }],
+                  selectedKey: this.properties.categoryColumn || '',
                   disabled: !selectedListId
                 }),
                 PropertyPaneDropdown('startDateColumn', {

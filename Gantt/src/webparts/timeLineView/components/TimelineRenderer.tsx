@@ -131,20 +131,21 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
     }
   };
 
-  // Color palette for owners - evenly distributed colors
-  const colors = [
-    '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', 
-    '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
-    '#FF9A56', '#6BCB77', '#4D96FF', '#FFD93D',
-    '#6C5CE7', '#E84393', '#00B894', '#FF7675'
-  ];
+  // Category to color mapping
+  const categoryColorMap: { [key: string]: string } = {
+    'Engagement': '#0078D4',   // Blue
+    'Planning': '#E81123',     // Red
+    'PTO': '#107C10',          // Green
+    'Reserved': '#FFB900',     // Yellow
+    'Other': '#8661C5'         // Purple
+  };
 
-  const getOwnerColor = (owner: string): string => {
-    let hash = 0;
-    for (let i = 0; i < owner.length; i++) {
-      hash = owner.charCodeAt(i) + ((hash << 5) - hash);
+  const getCategoryColor = (category?: string): string => {
+    if (category && categoryColorMap[category]) {
+      return categoryColorMap[category];
     }
-    return colors[Math.abs(hash) % colors.length];
+    // Default to purple/Other if category is not recognized
+    return categoryColorMap['Other'];
   };
 
   // Calculate date range across all tasks
@@ -499,7 +500,7 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
                                 width: `${barWidth - TimelineConstants.TASK_WIDTH_REDUCTION}px`,
                                 top: `${TimelineConstants.TASK_TOP_OFFSET}px`,
                                 height: `${TimelineConstants.TASK_HEIGHT}px`,
-                                backgroundColor: getOwnerColor(owner),
+                                backgroundColor: getCategoryColor(task.category),
                                 borderRadius: `${TimelineConstants.TASK_BORDER_RADIUS}px`,
                                 cursor: 'pointer',
                                 transition: 'all 0.2s',

@@ -51,30 +51,38 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     console.log('=== fetchTasks called ===');
     console.log('Props:', {
       listId: props.listId,
-      listURL: props.listURL,
+      powerAppURL: props.powerAppURL,
       titleColumn: props.titleColumn,
       ownerColumn: props.ownerColumn,
+      categoryColumn: props.categoryColumn,
       startDateColumn: props.startDateColumn,
       endDateColumn: props.endDateColumn
     });
 
-    if (!props.listId && !props.listURL) {
+    if (!props.listId) {
       console.warn('No list selected');
-      setState(prev => ({ ...prev, loading: false, error: 'Please select a list and specify the list URL' }));
+      setState(prev => ({ ...prev, loading: false, error: 'Please select a list' }));
+      return;
+    }
+
+    if (!props.powerAppURL) {
+      console.warn('No Power App URL configured');
+      setState(prev => ({ ...prev, loading: false, error: 'Please select a Power App URL' }));
       return;
     }
 
     const titleCol = props.titleColumn;
     const ownerCol = props.ownerColumn;
+    const categoryCol = props.categoryColumn;
     const startDateCol = props.startDateColumn;
     const endDateCol = props.endDateColumn;
 
-    if (!titleCol || !startDateCol || !endDateCol) {
+    if (!titleCol || !ownerCol || !categoryCol || !startDateCol || !endDateCol) {
       console.error('Required columns not configured');
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: 'Please configure all required columns (Title, Start Date, End Date)'
+        error: 'Please configure all required columns (Title, Owner, Category, Start Date, End Date)'
       }));
       return;
     }
@@ -82,13 +90,15 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const listSelector = props.listId 
-        ? `lists('${props.listId}')` 
-        : `lists/getbytitle('${encodeURIComponent(props.listURL || '')}')`;
+      // listId is required by the validation logic above, so use it
+      const listSelector = `lists('${props.listId}')`;
 
       const selectFields = ['ID', titleCol];
       if (ownerCol) {
         selectFields.push(ownerCol);
+      }
+      if (categoryCol) {
+        selectFields.push(categoryCol);
       }
       selectFields.push(startDateCol, endDateCol);
 
@@ -147,6 +157,11 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           }
         }
 
+        let category: string | undefined;
+        if (categoryCol && item[categoryCol]) {
+          category = item[categoryCol];
+        }
+
         let startDate = new Date();
         let endDate = new Date(startDate.getTime() + TimelineViewConstants.DAYS_IN_A_WEEK * TimelineViewConstants.MILLISECONDS_PER_DAY);
 
@@ -172,6 +187,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           id: item.ID?.toString() || item.Id?.toString() || '0',
           name: title,
           owner: owner,
+          category: category,
           start: startDate,
           end: endDate,
           progress: 0,
@@ -211,7 +227,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         error: `Error loading tasks: ${error instanceof Error ? error.message : String(error)}`
       }));
     }
-  }, [props.listId, props.listURL, props.titleColumn, props.ownerColumn, props.startDateColumn, props.endDateColumn, props.webUrl, props.spHttpClient, state.chartStartDate]);
+  }, [props.listId, props.powerAppURL, props.titleColumn, props.ownerColumn, props.categoryColumn, props.startDateColumn, props.endDateColumn, props.webUrl, props.spHttpClient, state.chartStartDate]);
 
   const updateTaskDate = async (taskId: string, start: Date, end: Date) => {
     console.log('Updating task:', taskId, start, end);
@@ -249,7 +265,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   }, [fetchTasks]);
 
   const handleAddTask = (date: Date, owner: string) => {
-    if (!props.listURL) return;
+    if (!props.powerAppURL) return;
 
     iframeInitialLoad.current = true; // Reset on open
 
@@ -260,7 +276,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     const isTeams = !!context.sdks.microsoftTeams;
     const loginHint = context.pageContext.user.email;
     
-    let url = `${props.listURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
+    let url = `${props.powerAppURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
 
     if (props.ownerColumn && owner) {
       url += `&${props.ownerColumn}=${encodeURIComponent(owner)}`;
@@ -276,7 +292,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
 
   const handleModifyTask = (task: ITask) => {
 
-    if (!props.listURL) return;
+    if (!props.powerAppURL) return;
 
     iframeInitialLoad.current = true; // Reset on open
 
@@ -284,7 +300,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     const isTeams = !!context.sdks.microsoftTeams;
     const loginHint = context.pageContext.user.email;
 
-    let url = `${props.listURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
+    let url = `${props.powerAppURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
     if (isTeams) {
       url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
     }
@@ -296,9 +312,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     if (!confirm(`Are you sure you want to delete "${task.name}"?`)) return;
 
     try {
-      const listSelector = props.listId 
-        ? `lists('${props.listId}')` 
-        : `lists/getbytitle('${encodeURIComponent(props.listURL || '')}')`;
+      const listSelector = `lists('${props.listId}')`; 
         
       const apiUrl = `${props.webUrl}/_api/web/${listSelector}/items(${task.id})`;
       
@@ -391,7 +405,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   }, [props.ownerSequence]);
 
   // Check if configuration is missing
-  const isConfigured = (props.listId || props.listURL) && props.titleColumn && props.startDateColumn && props.endDateColumn;
+  const isConfigured = props.listId && props.powerAppURL && props.titleColumn && props.ownerColumn && props.startDateColumn && props.endDateColumn;
 
   if (state.loading) {
     return (
@@ -416,8 +430,10 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           <h3>Configuration Required</h3>
           <p>Please configure the web part properties:</p>
           <ul>
-            {!props.listId && !props.listURL && <li>• Select a SharePoint list and URL</li>}
+            {!props.listId && <li>• Select a SharePoint list</li>}
+            {!props.powerAppURL && <li>• Select a Power App URL</li>}
             {!props.titleColumn && <li>• Select a Task Title column</li>}
+            {!props.ownerColumn && <li>• Select an Owner column</li>}
             {!props.startDateColumn && <li>• Select a Start Date column</li>}
             {!props.endDateColumn && <li>• Select an End Date column</li>}
           </ul>
