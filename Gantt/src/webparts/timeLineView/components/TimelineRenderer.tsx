@@ -135,6 +135,7 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
   const categoryColorMap: { [key: string]: string } = {
     'Engagement': '#0078D4',   // Blue
     'Planning': '#E81123',     // Red
+    'Internal Meeting': '#FF8C00', // Orange
     'PTO': '#107C10',          // Green
     'Reserved': '#FFB900',     // Yellow
     'Other': '#8661C5'         // Purple

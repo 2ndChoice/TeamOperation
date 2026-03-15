@@ -6,6 +6,7 @@ import TimelineRenderer, { ITimelineRendererHandle } from './TimelineRenderer';
 import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
+import { useConfirm } from '../../useConfirm';
 
 export interface ITimelineViewState {
   tasks: ITask[];
@@ -302,14 +303,20 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     setState(prev => ({ ...prev, isPanelOpen: true, panelUrl: url }));
   };
 
+  // Hook calls must be at the top level of the component
+  const { confirm, ConfirmDialog } = useConfirm();
+
+
   const handleDeleteTask = async (task: ITask) => {
-    if (!confirm(`Are you sure you want to delete "${task.name}"?`)) return;
+    
+    const ok = await confirm("Delete record", `Are you sure you want to delete "${task.name}"?`);
+    
+    if (!ok) return;
 
     try {
-      const listSelector = `lists('${props.listId}')`; 
-        
+      const listSelector = `lists('${props.listId}')`;         
       const apiUrl = `${props.webUrl}/_api/web/${listSelector}/items(${task.id})`;
-      
+          
       const response = await props.spHttpClient.post(
         apiUrl,
         SPHttpClient.configurations.v1,
@@ -332,9 +339,9 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         alert('Failed to delete task.');
       }
     } catch (error) {
-      console.error('Error deleting task:', error);
-      alert('Error deleting task.');
-    }
+          console.error('Error deleting task:', error);
+          alert('Error deleting task.');
+    }      
   };
 
   const handleZoomIn = () => {
@@ -359,12 +366,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       setState(prev => ({ ...prev, chartStartDate: null }));
     }
   };
-
-  const handleTaskClick = (task: ITask) => {
-    console.log('Task clicked:', task);
-    alert(`Task: ${task.name}\nOwner: ${task.owner}\nStart: ${task.start.toLocaleDateString()}\nEnd: ${task.end.toLocaleDateString()}`);
-  };
-
 
   const onIframeError = (e: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
     console.error('iframe loading error:', e);
@@ -505,7 +506,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         groupedTasks={state.groupedTasks}
         pixelsPerDay={state.pixelsPerDay}
         chartStartDate={state.chartStartDate}
-        onTaskClick={handleTaskClick}
         ownerSequence={ownerSequence}
         onAddTask={handleAddTask}
         onModifyTask={handleModifyTask}
@@ -528,10 +528,12 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
             width="100%" 
             height="100%" 
             style={{ border: 'none' }} 
-            title="Task Form" 
+            title="Task Form"
+            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-top-navigation"
           />          
         </div>
       </Panel>
+      {ConfirmDialog}
     </div>
   );
 };
