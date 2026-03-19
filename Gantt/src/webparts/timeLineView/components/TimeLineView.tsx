@@ -533,7 +533,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         isOpen={state.isPanelOpen}
         onDismiss={onDismissPanel}
         type={PanelType.medium}
-        headerText={state.editingTask?.id ? 'Edit Task' : 'New Task'}
+        headerText={state.editingTask?.id ? 'Edit a Trip' : 'Add a New Trip'}
         closeButtonAriaLabel="Close"
         isLightDismiss={true}
       >

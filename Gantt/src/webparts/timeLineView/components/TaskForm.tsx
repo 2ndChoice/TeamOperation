@@ -22,13 +22,28 @@ export interface ITaskFormProps {
 const stackTokens: IStackTokens = { childrenGap: 15 };
 
 export const TaskForm: React.FC<ITaskFormProps> = (props) => {
-  const [task, setTask] = useState<any>(props.task || {});
+  const [task, setTask] = useState<any>(() => {
+    const initialTask = { ...(props.task || {}) };
+    // If it's a new record (no ID) and has a start date but no end date, default to start + 5 days
+    if (!initialTask.id && initialTask.start && !initialTask.end) {
+      const endDate = new Date(initialTask.start.getTime());
+      endDate.setDate(endDate.getDate() + 5);
+      initialTask.end = endDate;
+    }
+    return initialTask;
+  });
   const [destinationOptions, setDestinationOptions] = useState<IComboBoxOption[]>([]);
   const [ownerOptions, setOwnerOptions] = useState<IComboBoxOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<IComboBoxOption[]>([]);
 
   useEffect(() => {
-    setTask(props.task || {});
+    const updatedTask = { ...(props.task || {}) };
+    if (!updatedTask.id && updatedTask.start && !updatedTask.end) {
+      const endDate = new Date(updatedTask.start.getTime());
+      endDate.setDate(endDate.getDate() + 5);
+      updatedTask.end = endDate;
+    }
+    setTask(updatedTask);
   }, [props.task]);
 
   useEffect(() => {
@@ -81,7 +96,14 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
           if (categoryRes.ok) {
             const categoryData = await categoryRes.json();
             if (categoryData.Choices) {
-              setCategoryOptions(categoryData.Choices.map((choice: string) => ({ key: choice, text: choice })));
+              const choices = categoryData.Choices.map((choice: string) => ({ key: choice, text: choice }));
+              setCategoryOptions(choices);
+              setTask((prev: any) => {
+                if (!prev.category && choices.length > 0) {
+                  return { ...prev, category: choices[0].text };
+                }
+                return prev;
+              });
             }
           }
         }
@@ -128,6 +150,16 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
     props.onSave(task);
   };
 
+  // Validate that all required fields have a value (and aren't just empty spaces)
+  const isFormValid = !!(
+    task.name?.trim() &&
+    task.owner?.trim() &&
+    task.category?.trim() &&
+    task.destination?.trim() &&
+    task.start &&
+    task.end
+  );
+
   return (
     <Stack tokens={stackTokens} styles={{ root: { padding: 20 } }}>
       <TextField label="Trip short description" value={task.name || ''} onChange={onTitleChange} required />
@@ -137,14 +169,18 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
         text={task.owner || ''}
         allowFreeform={true}
         autoComplete="on"
+        required={true}
         onChange={onOwnerChange}
       />
+      <DatePicker label="Start Date" value={task.start} onSelectDate={onStartDateChange} isRequired={true} />
+      <DatePicker label="End Date" value={task.end} onSelectDate={onEndDateChange} isRequired={true} />
       <ComboBox
-        label="Category"
+        label="Trip type"
         options={categoryOptions}
         text={task.category || ''}
         allowFreeform={true}
         autoComplete="on"
+        required={true}
         onChange={onCategoryChange}
       />
       <ComboBox
@@ -153,14 +189,22 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
         text={task.destination || ''}
         allowFreeform={true}
         autoComplete="on"
+        required={true}
         onChange={onDestinationChange}
       />
       <TextField label="TR Number" value={task.trNumber || ''} onChange={onTrNumberChange} />
       <TextField label="Cost" type="number" value={task.cost || ''} onChange={onCostChange} />
-      <DatePicker label="Start Date" value={task.start} onSelectDate={onStartDateChange} />
-      <DatePicker label="End Date" value={task.end} onSelectDate={onEndDateChange} />
       <Stack horizontal tokens={{ childrenGap: 10 }} horizontalAlign="end">
-        <PrimaryButton text="Save" onClick={onSave} disabled={!task.name} />
+        <PrimaryButton 
+          text="Save" 
+          onClick={onSave} 
+          disabled={!isFormValid} 
+          styles={{
+            root: { backgroundColor: 'lightblue', borderColor: '#8a8886', color: 'black' },
+            rootHovered: { backgroundColor: '#87ceeb', borderColor: '#8a8886', color: 'black' },
+            rootPressed: { backgroundColor: '#00bfff', borderColor: '#8a8886', color: 'black' }
+          }}
+        />
         <DefaultButton text="Cancel" onClick={props.onCancel} />
       </Stack>
     </Stack>
