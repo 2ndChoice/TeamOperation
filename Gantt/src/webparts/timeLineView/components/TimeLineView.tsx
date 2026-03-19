@@ -53,8 +53,8 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   const fetchTasks = useCallback(async () => {
     console.log('=== fetchTasks called ===');
     console.log('Props:', {
-      listId: props.listId,
-      powerAppURL: props.powerAppURL,
+      tripListId: props.tripListId,
+      destinationListId: props.destinationListId,
       titleColumn: props.titleColumn,
       ownerColumn: props.ownerColumn,
       categoryColumn: props.categoryColumn,
@@ -62,7 +62,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       endDateColumn: props.endDateColumn
     });
 
-    if (!props.listId) {
+    if (!props.tripListId) {
       console.warn('No list selected');
       setState(prev => ({ ...prev, loading: false, error: 'Please select a list' }));
       return;
@@ -87,8 +87,8 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // listId is required by the validation logic above, so use it
-      const listSelector = `lists('${props.listId}')`;
+      // tripListId is required by the validation logic above, so use it
+      const listSelector = `lists('${props.tripListId}')`;
 
       const selectFields = ['ID', titleCol];
       if (ownerCol) {
@@ -232,7 +232,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         error: `Error loading tasks: ${error instanceof Error ? error.message : String(error)}`
       }));
     }
-  }, [props.listId, props.powerAppURL, props.titleColumn, props.ownerColumn, props.categoryColumn, props.startDateColumn, props.endDateColumn, props.webUrl, props.spHttpClient, state.chartStartDate]);
+  }, [props.tripListId, props.titleColumn, props.ownerColumn, props.categoryColumn, props.startDateColumn, props.endDateColumn, props.webUrl, props.spHttpClient, state.chartStartDate]);
 
   const updateTaskDate = async (taskId: string, start: Date, end: Date) => {
     console.log('Updating task:', taskId, start, end);
@@ -249,14 +249,14 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   }, [fetchTasks]);
 
   const handleSaveTask = async (task: Partial<ITask>) => {
-    const { listId, webUrl, spHttpClient, titleColumn, ownerColumn, categoryColumn, startDateColumn, endDateColumn } = props;
+    const { tripListId, webUrl, spHttpClient, titleColumn, ownerColumn, categoryColumn, startDateColumn, endDateColumn } = props;
 
-    if (!listId) return;
+    if (!tripListId) return;
 
     // Optimistically close the panel immediately so the user doesn't have to wait
     setState(prev => ({ ...prev, isPanelOpen: false, editingTask: null }));
 
-    const listSelector = `lists('${listId}')`;
+    const listSelector = `lists('${tripListId}')`;
     let apiUrl = `${webUrl}/_api/web/${listSelector}/items`;
     const headers: any = {};
     
@@ -353,7 +353,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     if (!ok) return;
 
     try {
-      const listSelector = `lists('${props.listId}')`;         
+      const listSelector = `lists('${props.tripListId}')`;         
       const apiUrl = `${props.webUrl}/_api/web/${listSelector}/items(${task.id})`;
           
       const response = await props.spHttpClient.post(
@@ -417,7 +417,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   }, [props.ownerSequence]);
 
   // Check if configuration is missing
-  const isConfigured = props.listId && props.titleColumn && props.ownerColumn && props.startDateColumn && props.endDateColumn;
+  const isConfigured = props.tripListId && props.destinationListId && props.titleColumn && props.ownerColumn && props.startDateColumn && props.endDateColumn;
 
   if (state.loading) {
     return (
@@ -442,8 +442,8 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           <h3>Configuration Required</h3>
           <p>Please configure the web part properties:</p>
           <ul>
-            {!props.listId && <li>• Select a SharePoint list</li>}
-            {!props.powerAppURL && <li>• Select a Power App URL</li>}
+            {!props.tripListId && <li>• Select a SharePoint list</li>}
+            {!props.destinationListId && <li>• Select a Destination list</li>}
             {!props.titleColumn && <li>• Select a Task Title column</li>}
             {!props.ownerColumn && <li>• Select an Owner column</li>}
             {!props.startDateColumn && <li>• Select a Start Date column</li>}
@@ -543,7 +543,8 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           onCancel={onDismissPanel}
           spHttpClient={props.spHttpClient}
           webUrl={props.webUrl}
-          listId={props.listId as string}
+          tripListId={props.tripListId as string}
+          destinationListId={props.destinationListId}
           ownerColumn={props.ownerColumn as string}
           categoryColumn={props.categoryColumn as string}
         />

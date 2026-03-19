@@ -14,7 +14,8 @@ export interface ITaskFormProps {
   onCancel: () => void;
   spHttpClient: SPHttpClient;
   webUrl: string;
-  listId: string;
+  tripListId: string;
+  destinationListId?: string;
   ownerColumn: string;
   categoryColumn: string;
 }
@@ -48,10 +49,10 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
 
   useEffect(() => {
     const fetchDestinations = async () => {
-      if (!props.spHttpClient || !props.webUrl) return;
+      if (!props.spHttpClient || !props.webUrl || !props.destinationListId) return;
       try {
         const response = await props.spHttpClient.get(
-          `${props.webUrl}/_api/web/lists/GetByTitle('sg_CityCountry')/items?$select=Id,Title&$top=5000`,
+          `${props.webUrl}/_api/web/lists('${props.destinationListId}')/items?$select=Id,Title&$top=5000`,
           SPHttpClient.configurations.v1
         );
         if (response.ok) {
@@ -62,22 +63,22 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
           }));
           setAllDestinations(options);
         } else {
-          console.error('Failed to fetch sg_CityCountry list');
+          console.error('Failed to fetch location (city/country) list');
         }
       } catch (error) {
         console.error('Error fetching destinations:', error);
       }
     };
     fetchDestinations();
-  }, [props.spHttpClient, props.webUrl]);
+  }, [props.spHttpClient, props.webUrl, props.destinationListId]);
 
   useEffect(() => {
     const fetchChoices = async () => {
-      if (!props.spHttpClient || !props.webUrl || !props.listId) return;
+      if (!props.spHttpClient || !props.webUrl || !props.tripListId) return;
       try {
         if (props.ownerColumn) {
           const ownerRes = await props.spHttpClient.get(
-            `${props.webUrl}/_api/web/lists('${props.listId}')/fields/getByInternalNameOrTitle('${props.ownerColumn}')`,
+            `${props.webUrl}/_api/web/lists('${props.tripListId}')/fields/getByInternalNameOrTitle('${props.ownerColumn}')`,
             SPHttpClient.configurations.v1
           );
           if (ownerRes.ok) {
@@ -90,7 +91,7 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
 
         if (props.categoryColumn) {
           const categoryRes = await props.spHttpClient.get(
-            `${props.webUrl}/_api/web/lists('${props.listId}')/fields/getByInternalNameOrTitle('${props.categoryColumn}')`,
+            `${props.webUrl}/_api/web/lists('${props.tripListId}')/fields/getByInternalNameOrTitle('${props.categoryColumn}')`,
             SPHttpClient.configurations.v1
           );
           if (categoryRes.ok) {
@@ -112,7 +113,7 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
       }
     };
     fetchChoices();
-  }, [props.spHttpClient, props.webUrl, props.listId, props.ownerColumn, props.categoryColumn]);
+  }, [props.spHttpClient, props.webUrl, props.tripListId, props.ownerColumn, props.categoryColumn]);
 
   const onTitleChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setTask({ ...task, name: newValue || '' });

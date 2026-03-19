@@ -17,13 +17,8 @@ export interface ITask {
 
 export interface ITimelineViewProps {
   description: string;
-  listId?: string;
-  /**
-   * URL of the Power App form used for editing/adding items.  This is
-   * no longer used to identify the list itself (listId handles that)
-   * but is required when opening the embedded form from the timeline.
-   */
-  powerAppURL?: string;
+  tripListId?: string;
+  destinationListId?: string;
   titleColumn?: string;
   ownerColumn?: string;
   categoryColumn?: string;
@@ -43,4 +38,3 @@ export interface ITimelineViewProps {
   maxPixelsPerDay?: number;
   webpartTitle?: string;
 }
-

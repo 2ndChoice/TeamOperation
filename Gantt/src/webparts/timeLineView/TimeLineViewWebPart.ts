@@ -19,8 +19,8 @@ import { ITimelineViewProps } from './components/ITimeLineViewProps';
 export interface ITimelineViewWebPartProps {
   description: string;
   siteUrl?: string;
-  listId?: string;
-  powerAppURL?: string;
+  tripListId?: string;
+  destinationListId?: string;
   titleColumn?: string;
   ownerColumn?: string;
   categoryColumn?: string;
@@ -53,8 +53,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   public render(): void {
     console.log('WebPart render called with properties:', {
       description: this.properties.description,
-      listId: this.properties.listId,
-      powerAppURL: this.properties.powerAppURL,
+      tripListId: this.properties.tripListId,
+      destinationListId: this.properties.destinationListId,
       titleColumn: this.properties.titleColumn,
       ownerColumn: this.properties.ownerColumn,
       categoryColumn: this.properties.categoryColumn,
@@ -67,8 +67,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       TimelineView,
       {
         description: this.properties.description,
-        listId: this.properties.listId,
-        powerAppURL: this.properties.powerAppURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
+        tripListId: this.properties.tripListId,
+        destinationListId: this.properties.destinationListId,
         titleColumn: this.properties.titleColumn || 'Title',
         ownerColumn: this.properties.ownerColumn || 'Consultant',
         categoryColumn: this.properties.categoryColumn || 'TripType',
@@ -123,8 +123,8 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       }));
 
       // If a list is already selected, load its columns
-      if (this.properties.listId) {
-        await this.loadColumns(this.properties.listId);
+      if (this.properties.tripListId) {
+        await this.loadColumns(this.properties.tripListId);
       }
     } catch (error) {
       console.error('Error loading lists:', error);
@@ -199,7 +199,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
       // Clear lists and columns when site URL changes
       this.lists = [];
       this.columns = {};
-      this.properties.listId = '';
+      this.properties.tripListId = '';
       this.properties.titleColumn = '';
       this.properties.ownerColumn = '';
       this.properties.categoryColumn = '';
@@ -209,7 +209,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
         this.context.propertyPane.refresh();
         this.render();
       });
-    } else if (propertyPath === 'listId' && newValue) {
+    } else if (propertyPath === 'tripListId' && newValue) {
       // Clear column selections when list changes
       this.properties.titleColumn = '';
       this.properties.ownerColumn = '';
@@ -236,7 +236,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
-    const selectedListId = this.properties.listId || '';
+    const selectedListId = this.properties.tripListId || '';
     const availableColumns = selectedListId ? (this.columns[selectedListId] || []) : [];
 
     return {
@@ -255,16 +255,15 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                   value: this.properties.siteUrl || 'https://efutureway.sharepoint.com/sites/archive-2020-11-23T230729Z'
 
                 }),
-                PropertyPaneDropdown('listId', {
-                  label: 'Select SharePoint List',
+                PropertyPaneDropdown('tripListId', {
+                  label: 'Select SharePoint Trip List',
                   options: this.lists.length > 0 ? this.lists : [{ key: '', text: 'Loading lists...' }],
                   selectedKey: selectedListId
                 }),
-                PropertyPaneTextField('powerAppURL', {
-                  label: 'Power App Form URL',
-                  description: 'Enter Power App Form URL for editing',
-                  value: this.properties.powerAppURL || 'https://apps.powerapps.com/play/e/Default-0fee8ff2-a3b2-4018-9c75-3a1d5591fedc/a/06be35db-4ca1-4ac5-8c7b-b1012db6b73c',
-                  disabled: !selectedListId
+                PropertyPaneDropdown('destinationListId', {
+                  label: 'Select SharePoint City/Country List',
+                  options: this.lists.length > 0 ? this.lists : [{ key: '', text: 'Loading lists...' }],
+                  selectedKey: this.properties.destinationListId || ''
                 })
               ]
             },
