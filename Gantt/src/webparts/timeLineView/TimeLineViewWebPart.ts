@@ -48,7 +48,6 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
   private lists: IPropertyPaneDropdownOption[] = [];
   private columns: { [listId: string]: IPropertyPaneDropdownOption[] } = {};
   private loadingLists: boolean = false;
-  private _teamsContext: any;
 
   public render(): void {
     console.log('WebPart render called with properties:', {
@@ -92,9 +91,6 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
 
   protected async onInit(): Promise<void> {
     return super.onInit().then(_ => {
-      // Capture Teams context if running in Teams
-      this._teamsContext = (this.context as any).sdks?.microsoftTeams?.context;
-      console.log('Teams context initialized:', this._teamsContext);
       return this.loadLists();
     });
   }

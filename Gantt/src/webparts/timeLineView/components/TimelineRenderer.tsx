@@ -178,7 +178,7 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
   };
 
 
-  const { minDate, maxDate } = getAllDates();
+  const { maxDate } = getAllDates();
 
   const totalDays = Math.ceil((maxDate.getTime() - theStartDate.getTime()) / TimelineConstants.MILLISECONDS_PER_DAY);
 
@@ -204,9 +204,6 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
     // Create a NEW Date object, don't reference the prop directly
     let currentDate = new Date(theStartDate);
 
-    // print out the start date: 
-    // headerDates.push(new Date(theStartDate));
-
     if (shouldShowWeekLabels) {
       // Week: align to Monday of the week containing startDate
       const day = currentDate.getDay(); // 0 (Sun) - 6 (Sat)
@@ -229,8 +226,6 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
         headerDates.push(new Date(currentDate));
         currentDate.setMonth(currentDate.getMonth() + 1);
       }
-      // draw one extra month at the end for better UX
-      // headerDates.push(new Date(currentDate));
     }
 
     return headerDates;
@@ -438,8 +433,7 @@ const TimelineRendererInner: React.ForwardRefRenderFunction<ITimelineRendererHan
                   />
                 );
               })}
-              {!shouldShowWeekLabels && headerDates.map((date: Date, idx: number) => {
-                //const lastDate = idx === 0 ? startDate : headerDates[idx - 1];
+            {!shouldShowWeekLabels && headerDates.map((date: Date, idx: number) => {
                 const days = Math.ceil((date.getTime() - theStartDate.getTime()) / TimelineConstants.MILLISECONDS_PER_DAY);
                 const left = days * pixelsPerDay;
                 return (

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import styles from './TimeLineView.module.scss';
 import { ITask, ITimelineViewProps } from './ITimeLineViewProps';
 import TimelineRenderer, { ITimelineRendererHandle } from './TimelineRenderer';
@@ -7,7 +7,6 @@ import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { useConfirm } from '../../useConfirm';
-import { authentication } from "@microsoft/teams-js";
 import { TaskForm } from './TaskForm';
 
 export interface ITimelineViewState {
@@ -25,8 +24,7 @@ const TimelineViewConstants = {
   ZOOM_STEP: 1,
   DAYS_IN_A_WEEK: 7,
   API_ITEM_LIMIT: 5000,
-  MILLISECONDS_PER_DAY: 1000 * 60 * 60 * 24,
-  BUTTON_SIZE: 28
+  MILLISECONDS_PER_DAY: 1000 * 60 * 60 * 24
 };
 
 const TimelineView: React.FC<ITimelineViewProps> = (props) => {
@@ -99,8 +97,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       }
       selectFields.push(startDateCol, endDateCol);
       
-      // For lookup fields, select the ID and the expanded text value (assuming it looks up 'Title')
-      // selectFields.push('DestinationId', 'Destination/Title', 'TRNumber', 'Cost');
       selectFields.push('DestinationId', 'Destination/Title', 'TRNumber', 'Cost');
 
       const selectQuery = selectFields.join(',');
@@ -233,10 +229,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       }));
     }
   }, [props.tripListId, props.titleColumn, props.ownerColumn, props.categoryColumn, props.startDateColumn, props.endDateColumn, props.webUrl, props.spHttpClient, state.chartStartDate]);
-
-  const updateTaskDate = async (taskId: string, start: Date, end: Date) => {
-    console.log('Updating task:', taskId, start, end);
-  };
 
   const onDismissPanel = React.useCallback(() => {
     console.log('onDismissPanel called');
@@ -464,14 +456,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       </div>
     );
   }
-/*
-            <!--
-              <label htmlFor="startDateInput" style={{ fontWeight: 'bold', fontSize: '14px' }}>
-                Timeline Start Date:
-              </label> 
-            -->
-
-*/
   return (
     <div className={styles.timelineView}>
       <div className={styles.toolbar}>
