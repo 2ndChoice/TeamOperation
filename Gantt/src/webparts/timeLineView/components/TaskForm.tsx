@@ -32,7 +32,7 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
     }
     return initialTask;
   });
-  const [destinationOptions, setDestinationOptions] = useState<IComboBoxOption[]>([]);
+  const [allDestinations, setAllDestinations] = useState<IComboBoxOption[]>([]);
   const [ownerOptions, setOwnerOptions] = useState<IComboBoxOption[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<IComboBoxOption[]>([]);
 
@@ -60,7 +60,7 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
             key: item.Id,
             text: item.Title
           }));
-          setDestinationOptions(options);
+          setAllDestinations(options);
         } else {
           console.error('Failed to fetch sg_CityCountry list');
         }
@@ -130,6 +130,14 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
     setTask({ ...task, destination: option ? option.text : value, destinationId: option ? option.key : undefined });
   };
 
+  // Handle raw text input to update the state and safely capture IDs on exact typing matches
+  const onDestinationInputValueChange = (text: string) => {
+    setTask((prev: any) => {
+      const exactMatch = allDestinations.find(o => o.text.toLowerCase() === text.toLowerCase());
+      return { ...prev, destination: text, destinationId: exactMatch ? exactMatch.key : undefined };
+    });
+  };
+
   const onTrNumberChange = (event: React.FormEvent<HTMLInputElement | HTMLTextAreaElement>, newValue?: string) => {
     setTask({ ...task, trNumber: newValue || '' });
   };
@@ -159,6 +167,16 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
     task.start &&
     task.end
   );
+
+  // Dynamically filter options based on the typed destination text and limit to 10 results
+  const destinationOptions = React.useMemo(() => {
+    const text = task.destination || '';
+    if (!text) {
+      return allDestinations.slice(0, 10);
+    }
+    const filtered = allDestinations.filter(o => o.text.toLowerCase().includes(text.toLowerCase()));
+    return filtered.slice(0, 10);
+  }, [allDestinations, task.destination]);
 
   return (
     <Stack tokens={stackTokens} styles={{ root: { padding: 20 } }}>
@@ -191,6 +209,7 @@ export const TaskForm: React.FC<ITaskFormProps> = (props) => {
         autoComplete="on"
         required={true}
         onChange={onDestinationChange}
+        onInputValueChange={onDestinationInputValueChange}
       />
       <TextField label="TR Number" value={task.trNumber || ''} onChange={onTrNumberChange} />
       <TextField label="Cost" type="number" value={task.cost || ''} onChange={onCostChange} />
