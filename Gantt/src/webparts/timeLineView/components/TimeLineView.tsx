@@ -7,6 +7,7 @@ import { SPHttpClient, SPHttpClientResponse } from '@microsoft/sp-http';
 import { Icon } from '@fluentui/react/lib/Icon';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { useConfirm } from '../../useConfirm';
+import { authentication } from "@microsoft/teams-js";
 
 export interface ITimelineViewState {
   tasks: ITask[];
@@ -46,6 +47,19 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     isPanelOpen: false,
     panelUrl: ''
     });
+
+    const loginToPowerApp = async (url: string) => {
+      try {
+        await authentication.authenticate({
+          url: url,
+          width: 800,
+          height: 600,
+          isExternal: true,
+        });
+      } catch (error) {
+        console.error("Login failed", error);
+      }
+    };
 
   // Fetch tasks from SharePoint
   const fetchTasks = useCallback(async () => {
@@ -259,7 +273,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     };
   }, [fetchTasks]);
 
-  const handleAddTask = (date: Date, owner: string) => {
+  const handleAddTask = async (date: Date, owner: string) => {
     if (!props.powerAppURL) return;
 
     iframeInitialLoad.current = true; // Reset on open
@@ -271,7 +285,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     const isTeams = !!context.sdks.microsoftTeams;
     const loginHint = context.pageContext.user.email;
     
-    let url = `${props.powerAppURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
+    let url = `${props.powerAppURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&authMode=onbehalfof&sdkVersion=2.3.2&enableOnBehalfOf=true&tenantId=0fee8ff2-a3b2-4018-9c75-3a1d5591fedc&Source=${encodeURIComponent(window.location.href)}`;
 
     if (props.ownerColumn && owner) {
       url += `&${props.ownerColumn}=${encodeURIComponent(owner)}`;
@@ -285,7 +299,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     setState(prev => ({ ...prev, isPanelOpen: true, panelUrl: url }));
   };
 
-  const handleModifyTask = (task: ITask) => {
+  const handleModifyTask = async (task: ITask) => {
 
     if (!props.powerAppURL) return;
 
@@ -295,7 +309,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     const isTeams = !!context.sdks.microsoftTeams;
     const loginHint = context.pageContext.user.email;
 
-    let url = `${props.powerAppURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&Source=${encodeURIComponent(window.location.href)}`;
+    let url = `${props.powerAppURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&authMode=onbehalfof&sdkVersion=2.3.2&enableOnBehalfOf=true&tenantId=0fee8ff2-a3b2-4018-9c75-3a1d5591fedc&Source=${encodeURIComponent(window.location.href)}`;
     if (isTeams) {
       url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
     }
@@ -529,7 +543,8 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
             height="100%" 
             style={{ border: 'none' }} 
             title="Task Form"
-            sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-top-navigation"
+            allow="geolocation *; microphone *; camera *; fullscreen *; clipboard-write *;"
+            sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-forms allow-orientation-lock allow-downloads"
           />          
         </div>
       </Panel>
