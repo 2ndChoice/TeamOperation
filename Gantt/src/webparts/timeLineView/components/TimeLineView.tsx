@@ -8,6 +8,7 @@ import { Icon } from '@fluentui/react/lib/Icon';
 import { Panel, PanelType } from '@fluentui/react/lib/Panel';
 import { useConfirm } from '../../useConfirm';
 import { authentication } from "@microsoft/teams-js";
+import { TaskForm } from './TaskForm';
 
 export interface ITimelineViewState {
   tasks: ITask[];
@@ -17,7 +18,7 @@ export interface ITimelineViewState {
   error: string | null;
   chartStartDate: Date | null;
   isPanelOpen: boolean;
-  panelUrl: string;
+  editingTask: Partial<ITask> | null;
 } 
 
 const TimelineViewConstants = {
@@ -29,7 +30,6 @@ const TimelineViewConstants = {
 };
 
 const TimelineView: React.FC<ITimelineViewProps> = (props) => {
-  const iframeInitialLoad = useRef<boolean>(true);
   const rendererRef = React.useRef<ITimelineRendererHandle | null>(null);
   
   // Get zoom configuration from props with fallback to defaults
@@ -45,21 +45,9 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     error: null,
     chartStartDate: new Date(new Date().getFullYear(), 0, 1),
     isPanelOpen: false,
-    panelUrl: ''
+    editingTask: null
     });
 
-    const loginToPowerApp = async (url: string) => {
-      try {
-        await authentication.authenticate({
-          url: url,
-          width: 800,
-          height: 600,
-          isExternal: true,
-        });
-      } catch (error) {
-        console.error("Login failed", error);
-      }
-    };
 
   // Fetch tasks from SharePoint
   const fetchTasks = useCallback(async () => {
@@ -110,6 +98,10 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         selectFields.push(categoryCol);
       }
       selectFields.push(startDateCol, endDateCol);
+      
+      // For lookup fields, select the ID and the expanded text value (assuming it looks up 'Title')
+      // selectFields.push('DestinationId', 'Destination/Title', 'TRNumber', 'Cost');
+      selectFields.push('DestinationId', 'Destination/Title', 'TRNumber', 'Cost');
 
       const selectQuery = selectFields.join(',');
       
@@ -120,7 +112,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         filterQuery = `&$filter=${startDateCol} ge datetime'${filterDate}'`;
       }
       
-      const apiUrl = `${props.webUrl}/_api/web/${listSelector}/items?$select=${selectQuery}${filterQuery}&$orderby=${startDateCol} asc&$top=${TimelineViewConstants.API_ITEM_LIMIT}`;
+      const apiUrl = `${props.webUrl}/_api/web/${listSelector}/items?$select=${selectQuery}&$expand=Destination${filterQuery}&$orderby=${startDateCol} asc&$top=${TimelineViewConstants.API_ITEM_LIMIT}`;
 
       console.log('Fetching from URL:', apiUrl);
 
@@ -132,7 +124,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API error:', errorText);
-        throw new Error(`Failed to fetch: ${response.status}`);
+        throw new Error(`Failed to fetch: ${response.status} , query: ${apiUrl}, error: ${errorText}`);
       }
 
       const data = await response.json();
@@ -199,9 +191,13 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
           category: category,
           start: startDate,
           end: endDate,
+          destination: item.Destination ? item.Destination.Title : '',
+          destinationId: item.DestinationId,
+          trNumber: item.TRNumber,
+          cost: item.Cost?.toString(),
           progress: 0,
           custom_class: ''
-        };
+        } as ITask;
       });
 
       // Group tasks by owner and sort by start date
@@ -244,13 +240,70 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
 
   const onDismissPanel = React.useCallback(() => {
     console.log('onDismissPanel called');
-    setState(prev => ({ ...prev, isPanelOpen: false, panelUrl: '' }));
+    setState(prev => ({ ...prev, isPanelOpen: false, editingTask: null }));
     // Save scroll position in renderer before refreshing tasks
     try {
       rendererRef.current?.saveScrollPosition();
     } catch (e) {}
     fetchTasks();
   }, [fetchTasks]);
+
+  const handleSaveTask = async (task: Partial<ITask>) => {
+    const { listId, webUrl, spHttpClient, titleColumn, ownerColumn, categoryColumn, startDateColumn, endDateColumn } = props;
+
+    if (!listId) return;
+
+    // Optimistically close the panel immediately so the user doesn't have to wait
+    setState(prev => ({ ...prev, isPanelOpen: false, editingTask: null }));
+
+    const listSelector = `lists('${listId}')`;
+    let apiUrl = `${webUrl}/_api/web/${listSelector}/items`;
+    const headers: any = {};
+    
+    const body: any = {};
+    if (titleColumn && task.name) body[titleColumn] = task.name;
+    if (ownerColumn && task.owner) body[ownerColumn] = task.owner;
+    if (categoryColumn && task.category) body[categoryColumn] = task.category;
+    if (startDateColumn && task.start) body[startDateColumn] = task.start.toISOString();
+    if (endDateColumn && task.end) body[endDateColumn] = task.end.toISOString();
+
+    const extendedTask = task as any;
+    
+    // Save the ID for Lookup columns
+    if (extendedTask.destinationId) body['DestinationId'] = extendedTask.destinationId;
+    if (extendedTask.trNumber) body['TRNumber'] = extendedTask.trNumber;
+    if (extendedTask.cost) body['Cost'] = extendedTask.cost;
+
+    let response: SPHttpClientResponse;
+
+    try {
+      if (task.id) {
+        apiUrl += `(${task.id})`;
+        headers['IF-MATCH'] = '*';
+        headers['X-HTTP-Method'] = 'MERGE';
+        response = await spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
+          headers: headers,
+          body: JSON.stringify(body)
+        });
+      } else {
+        response = await spHttpClient.post(apiUrl, SPHttpClient.configurations.v1, {
+          headers: headers,
+          body: JSON.stringify(body)
+        });
+      }
+
+      if (response.ok) {
+        fetchTasks();
+      } else {
+        const errorText = await response.text();
+        console.error('API error:', errorText);
+        alert(`Failed to save task. Error: ${errorText}`);
+      }
+    } catch (error) {
+      console.error('Error saving task:', error);
+      alert('Error saving task. Please check the console for details.');
+    }
+  };
 
 
   // Fetch tasks on mount
@@ -273,48 +326,20 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     };
   }, [fetchTasks]);
 
-  const handleAddTask = async (date: Date, owner: string) => {
-    if (!props.powerAppURL) return;
-
-    iframeInitialLoad.current = true; // Reset on open
-
-    // Format date as YYYY-MM-DD for the URL parameter
-    const dateParam = date.toISOString().split('T')[0];
-
-    const { context } = props;
-    const isTeams = !!context.sdks.microsoftTeams;
-    const loginHint = context.pageContext.user.email;
-    
-    let url = `${props.powerAppURL}?Mode=new&${props.startDateColumn}=${dateParam}&env=Embedded&hideNavbar=true&authMode=onbehalfof&sdkVersion=2.3.2&enableOnBehalfOf=true&tenantId=0fee8ff2-a3b2-4018-9c75-3a1d5591fedc&Source=${encodeURIComponent(window.location.href)}`;
-
-    if (props.ownerColumn && owner) {
-      url += `&${props.ownerColumn}=${encodeURIComponent(owner)}`;
-    }
-    if (isTeams) {
-      url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
-    }
-
-    console.log('Opening New Form URL:', url);
-
-    setState(prev => ({ ...prev, isPanelOpen: true, panelUrl: url }));
+  const handleAddTask = (date: Date, owner: string) => {
+    setState(prev => ({ 
+      ...prev, 
+      isPanelOpen: true, 
+      editingTask: { start: date, owner: owner } 
+    }));
   };
 
-  const handleModifyTask = async (task: ITask) => {
-
-    if (!props.powerAppURL) return;
-
-    iframeInitialLoad.current = true; // Reset on open
-
-    const { context } = props;
-    const isTeams = !!context.sdks.microsoftTeams;
-    const loginHint = context.pageContext.user.email;
-
-    let url = `${props.powerAppURL}?Mode=edit&ID=${task.id}&env=Embedded&hideNavbar=true&authMode=onbehalfof&sdkVersion=2.3.2&enableOnBehalfOf=true&tenantId=0fee8ff2-a3b2-4018-9c75-3a1d5591fedc&Source=${encodeURIComponent(window.location.href)}`;
-    if (isTeams) {
-      url += `&loginHint=${encodeURIComponent(loginHint)}&teams=true`;
-    }
-
-    setState(prev => ({ ...prev, isPanelOpen: true, panelUrl: url }));
+  const handleModifyTask = (task: ITask) => {
+    setState(prev => ({ 
+      ...prev, 
+      isPanelOpen: true, 
+      editingTask: task 
+    }));
   };
 
   // Hook calls must be at the top level of the component
@@ -381,28 +406,6 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
     }
   };
 
-  const onIframeError = (e: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
-    console.error('iframe loading error:', e);
-  };
-
-  const onIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement, Event>) => {
-    // The first time `onLoad` fires, we assume it's the initial load of the form.
-    // If it fires again, we assume the form was submitted or cancelled, and the
-    // app navigated, triggering a reload. This is a fragile assumption but can
-    // work if the Power App is configured to navigate on completion.
-    // The `postMessage` listener is still the most robust solution.
-    console.log('Iframe loaded.');
-
-    if (iframeInitialLoad.current) {
-        console.log('Initial load of form. Ignoring.');
-        iframeInitialLoad.current = false; // It has now loaded once
-        return;
-    } else {
-        console.log('Subsequent load of form detected. Closing panel.');
-        onDismissPanel();
-        return;
-    }
-  };
 
   // Parse owner sequence from props
   const ownerSequence = React.useMemo(() => {
@@ -414,7 +417,7 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
   }, [props.ownerSequence]);
 
   // Check if configuration is missing
-  const isConfigured = props.listId && props.powerAppURL && props.titleColumn && props.ownerColumn && props.startDateColumn && props.endDateColumn;
+  const isConfigured = props.listId && props.titleColumn && props.ownerColumn && props.startDateColumn && props.endDateColumn;
 
   if (state.loading) {
     return (
@@ -530,23 +533,20 @@ const TimelineView: React.FC<ITimelineViewProps> = (props) => {
         isOpen={state.isPanelOpen}
         onDismiss={onDismissPanel}
         type={PanelType.medium}
-        headerText="Trip Details"
+        headerText={state.editingTask?.id ? 'Edit Task' : 'New Task'}
         closeButtonAriaLabel="Close"
         isLightDismiss={true}
       >
-        <div style={{ width: '100%', height: 'calc(100vh - 100px)', overflow: 'hidden' }}>
-          <iframe 
-            src={state.panelUrl} 
-            onLoad={onIframeLoad}
-            onError={onIframeError}
-            width="100%" 
-            height="100%" 
-            style={{ border: 'none' }} 
-            title="Task Form"
-            allow="geolocation *; microphone *; camera *; fullscreen *; clipboard-write *;"
-            sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts allow-forms allow-orientation-lock allow-downloads"
-          />          
-        </div>
+        <TaskForm
+          task={state.editingTask}
+          onSave={handleSaveTask}
+          onCancel={onDismissPanel}
+          spHttpClient={props.spHttpClient}
+          webUrl={props.webUrl}
+          listId={props.listId as string}
+          ownerColumn={props.ownerColumn as string}
+          categoryColumn={props.categoryColumn as string}
+        />
       </Panel>
       {ConfirmDialog}
     </div>
