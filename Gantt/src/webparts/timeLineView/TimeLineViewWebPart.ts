@@ -317,7 +317,7 @@ export default class TimelineViewWebPart extends BaseClientSideWebPart<ITimeline
                 PropertyPaneTextField('webpartTitle', {
                   label: strings.WebpartTitleLabel,
                   description: strings.WebpartTitleDescription,
-                  value: this.properties.webpartTitle || 'Trip Planning (V 4.0)'
+                  value: this.properties.webpartTitle || 'Trip Planning (V 4.1)'
                 }),
                 PropertyPaneTextField('ownerSequence', {
                   label: strings.OwnerSequenceFieldLabel,
